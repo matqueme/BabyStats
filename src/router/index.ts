@@ -49,6 +49,18 @@ const routes = [
     component: () => import('@/pages/Settings.vue'),
     meta: { title: 'Réglages' },
   },
+  {
+    path: '/profile',
+    name: 'profile',
+    component: () => import('@/pages/Profile.vue'),
+    meta: { title: 'Mon profil' },
+  },
+  {
+    path: '/rooms',
+    name: 'rooms',
+    component: () => import('@/pages/Rooms.vue'),
+    meta: { title: 'Mes Rooms' },
+  },
 ]
 
 const router = createRouter({

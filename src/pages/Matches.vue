@@ -1,6 +1,14 @@
 <template>
   <el-card shadow="never">
-    <template #header><strong>Historique des matches</strong></template>
+    <template #header>
+      <div class="header-with-action">
+        <strong>Historique des matches</strong>
+        <el-button size="small" @click="$router.push('/teams')">
+          <PhUsers class="icon-left" />
+          Voir les équipes
+        </el-button>
+      </div>
+    </template>
     <el-table :data="matches" size="small" v-loading="false" empty-text="Aucun match">
       <el-table-column type="index" width="50" />
       <el-table-column label="Date" width="180">
@@ -18,15 +26,31 @@
 </template>
 
 <script setup lang="ts">
-import { storeToRefs } from 'pinia'
+import { computed } from 'vue'
 import { useBabyStore } from '../stores/baby'
+import { PhUsers } from '@phosphor-icons/vue'
 
 defineOptions({ name: 'MatchesPage' })
 
 const store = useBabyStore()
-const { matches, teams } = storeToRefs(store)
+const matches = computed(() => store.currentMatches)
+const teams = computed(() => store.currentTeams)
 
 function teamName(id: string) {
   return teams.value.find((t) => t.id === id)?.name || '—'
 }
 </script>
+
+<style scoped>
+.header-with-action {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.icon-left {
+  margin-right: 6px;
+  vertical-align: -2px;
+}
+</style>

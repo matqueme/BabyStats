@@ -67,14 +67,13 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { storeToRefs } from 'pinia'
 import { useBabyStore } from '../stores/baby'
 import { PhUsersFour, PhFloppyDisk, PhArrowCounterClockwise } from '@phosphor-icons/vue'
 
 defineOptions({ name: 'NewMatchPage' })
 
 const store = useBabyStore()
-const { players } = storeToRefs(store)
+const players = computed(() => store.currentPlayers)
 
 const mode = ref<'1v1' | '2v2'>('1v1')
 const teamSize = computed(() => (mode.value === '1v1' ? 1 : 2))

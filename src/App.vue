@@ -1,6 +1,7 @@
 <template>
   <el-container style="min-height: 100vh">
-    <el-aside width="220px" class="sidebar">
+    <!-- Sidebar hidden on small screens -->
+    <el-aside width="220px" class="sidebar hidden md:block">
       <div class="brand">BabyStats</div>
       <el-menu :default-active="route.path" router>
         <el-menu-item index="/">
@@ -41,6 +42,7 @@
       <el-header class="header">
         <div class="title">{{ route.meta?.title || 'BabyStats' }}</div>
         <div class="spacer" />
+        <ProfileMenu />
         <el-tooltip content="Basculer le thème" placement="bottom">
           <el-button @click="toggleTheme" circle>
             <PhMoon v-if="theme === 'dark'" />
@@ -49,15 +51,22 @@
         </el-tooltip>
       </el-header>
       <el-main>
-        <router-view />
+        <!-- add bottom padding on mobile so content isn't hidden behind the tab bar -->
+        <div class="px-4 py-4 pb-16 md:pb-6">
+          <router-view />
+        </div>
       </el-main>
     </el-container>
+    <!-- Mobile bottom tab bar -->
+    <MobileTabBar />
   </el-container>
 </template>
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useUiStore, type ThemeMode } from './stores/ui'
+import MobileTabBar from './components/MobileTabBar.vue'
+import ProfileMenu from './components/ProfileMenu.vue'
 import {
   PhHouseSimple,
   PhPlusCircle,
@@ -70,8 +79,10 @@ import {
   PhSun,
   PhMoon,
 } from '@phosphor-icons/vue'
+
 const route = useRoute()
 const ui = useUiStore()
+
 const theme = computed<ThemeMode>({
   get: () => ui.theme,
   set: (v) => ui.setTheme(v),

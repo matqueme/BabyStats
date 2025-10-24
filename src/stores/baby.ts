@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import type { GoalEvent, Id, Match, NewMatchPayload, Player, PlayerStatsRow, Team } from './types'
 import { nowIso, uid } from './types'
+import { useProfileStore } from './profile'
 
 const STORAGE_KEY = 'babystats:v1'
 
@@ -24,17 +25,44 @@ export const useBabyStore = defineStore('baby', {
     _matchesByPlayer: {} as Record<Id, Match[]>,
   }),
   getters: {
+    // Filtered by active room
+    currentPlayers(state): Player[] {
+      const profileStore = useProfileStore()
+      const roomId = profileStore.activeRoomId
+      if (!roomId) return state.players
+      return state.players.filter((p) => !p.roomId || p.roomId === roomId)
+    },
+    currentTeams(state): Team[] {
+      const profileStore = useProfileStore()
+      const roomId = profileStore.activeRoomId
+      if (!roomId) return state.teams
+      return state.teams.filter((t) => !t.roomId || t.roomId === roomId)
+    },
+    currentMatches(state): Match[] {
+      const profileStore = useProfileStore()
+      const roomId = profileStore.activeRoomId
+      if (!roomId) return state.matches
+      return state.matches.filter((m) => !m.roomId || m.roomId === roomId)
+    },
     leaderboard(state): PlayerStatsRow[] {
+      const profileStore = useProfileStore()
+      const roomId = profileStore.activeRoomId
+
+      // Filter by room
+      const players = state.players.filter((p) => !p.roomId || p.roomId === roomId)
+      const teams = state.teams.filter((t) => !t.roomId || t.roomId === roomId)
+      const matches = state.matches.filter((m) => !m.roomId || m.roomId === roomId)
+
       const teamHasPlayer = (teamId: Id, playerId: Id) => {
-        const t = state.teams.find((t) => t.id === teamId)
+        const t = teams.find((t) => t.id === teamId)
         return !!t?.playerIds.includes(playerId)
       }
       const matchesByPlayer = (playerId: Id) =>
-        state.matches.filter(
+        matches.filter(
           (m) => teamHasPlayer(m.teamAId, playerId) || teamHasPlayer(m.teamBId, playerId),
         )
 
-      const rows: PlayerStatsRow[] = state.players.map((p) => {
+      const rows: PlayerStatsRow[] = players.map((p) => {
         const m = matchesByPlayer(p.id)
         let wins = 0,
           losses = 0,
@@ -92,13 +120,21 @@ export const useBabyStore = defineStore('baby', {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(payload))
     },
     addPlayer(name: string) {
-      const p: Player = { id: uid(), name: name.trim(), createdAt: nowIso(), active: true }
+      const profileStore = useProfileStore()
+      const p: Player = {
+        id: uid(),
+        name: name.trim(),
+        createdAt: nowIso(),
+        active: true,
+        roomId: profileStore.activeRoomId || undefined,
+      }
       this.players.push(p)
       if (!(p.id in this.ratings)) this.ratings[p.id] = 1000
       this.persist()
       return p
     },
     addTeam(playerIds: Id[], name?: string) {
+      const profileStore = useProfileStore()
       const nm =
         name?.trim() ||
         playerIds.map((id) => this.players.find((p) => p.id === id)?.name || '??').join(' & ')
@@ -108,6 +144,7 @@ export const useBabyStore = defineStore('baby', {
         playerIds: [...playerIds],
         createdAt: nowIso(),
         active: true,
+        roomId: profileStore.activeRoomId || undefined,
       }
       this.teams.push(t)
       this.persist()
@@ -132,6 +169,7 @@ export const useBabyStore = defineStore('baby', {
       return this.addTeam(players)
     },
     recordMatch(input: NewMatchPayload) {
+      const profileStore = useProfileStore()
       const match: Match = {
         id: uid(),
         date: input.date ?? nowIso(),
@@ -142,6 +180,7 @@ export const useBabyStore = defineStore('baby', {
         scoreB: input.scoreB,
         goals: (input.goals ?? []).map((g) => ({ ...g, id: uid() }) as GoalEvent),
         notes: input.notes,
+        roomId: profileStore.activeRoomId || undefined,
       }
 
       this.matches.unshift(match)

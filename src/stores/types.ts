@@ -7,6 +7,7 @@ export interface Player {
   name: string
   createdAt: string // ISO
   active: boolean
+  roomId?: Id // Added for room filtering
 }
 
 export interface Team {
@@ -15,6 +16,7 @@ export interface Team {
   playerIds: Id[] // 1 or 2 players
   createdAt: string
   active: boolean
+  roomId?: Id // Added for room filtering
 }
 
 export interface GoalEvent {
@@ -37,6 +39,7 @@ export interface Match {
   scoreB: number
   goals: GoalEvent[]
   notes?: string
+  roomId?: Id // Added for room filtering
 }
 
 export interface PlayerStatsRow {
